@@ -95,9 +95,7 @@ async function speakCelebration(joke: string) {
 
   const voices = window.speechSynthesis.getVoices();
   const voice = chooseBestUSVoice(voices);
-
-  await speakText("You did awesome! You win a dad joke!", voice);
-  await speakText(joke, voice);
+  await speakText(`You did awesome! You win a dad joke! ${joke}`, voice);
 }
 
 export default function PerfectResultsPage() {

@@ -90,6 +90,18 @@ const DAD_JOKES = [
   "Why don't ants catch flu? Because they have tiny anti-bodies."
 ];
 
+function pickRandomJoke(exclude?: string) {
+  if (DAD_JOKES.length === 0) return "You're awesome!";
+  if (DAD_JOKES.length === 1) return DAD_JOKES[0] ?? "You're awesome!";
+
+  let joke = DAD_JOKES[Math.floor(Math.random() * DAD_JOKES.length)] ?? "You're awesome!";
+  while (exclude && joke === exclude) {
+    joke = DAD_JOKES[Math.floor(Math.random() * DAD_JOKES.length)] ?? "You're awesome!";
+  }
+
+  return joke;
+}
+
 async function speakCelebration(joke: string) {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
 
@@ -116,7 +128,7 @@ export default function PerfectResultsPage() {
       return;
     }
 
-    const joke = DAD_JOKES[Math.floor(Math.random() * DAD_JOKES.length)] ?? "You're awesome!";
+    const joke = pickRandomJoke();
     setSelectedJoke(joke);
     setReady(true);
 
@@ -141,6 +153,14 @@ export default function PerfectResultsPage() {
     router.push("/practice");
   };
 
+  const tellAnotherJoke = () => {
+    setSelectedJoke((current) => {
+      const next = pickRandomJoke(current);
+      void speakCelebration(next);
+      return next;
+    });
+  };
+
   if (!ready) return <main className="page"><p className="card">Loading…</p></main>;
 
   return (
@@ -160,6 +180,7 @@ export default function PerfectResultsPage() {
         <p className="big perfectJoke">🏆 Dad joke prize: {selectedJoke}</p>
 
         <div className="controls perfectControls">
+          <button className="btn" onClick={tellAnotherJoke} aria-label="Tell another dad joke">Tell another joke</button>
           <button className="btn" onClick={practiceAgain} aria-label="Practice again with same list">Practice Again</button>
           <button className="btn" onClick={() => router.push("/")} aria-label="Go to title page and practice other words">Practice other words</button>
         </div>

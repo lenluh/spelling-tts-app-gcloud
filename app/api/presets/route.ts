@@ -1,42 +1,93 @@
-import { promises as fs } from "fs";
-import path from "path";
 import { NextResponse } from "next/server";
 import { parseWords } from "@/lib/storage";
 
-const DEFAULT_PRESETS_DIR = path.join(process.cwd(), "word-lists");
+const DEFAULT_REMOTE_WORDS_URL = "http://spelling.elii.se/words/";
+
+type Preset = {
+  id: string;
+  name: string;
+  words: string[];
+  modifiedAt: number;
+  order: number;
+};
+
+function toAbsoluteUrl(baseUrl: string, href: string): string {
+  return new URL(href, baseUrl).toString();
+}
+
+function getTxtLinksFromHtml(html: string, baseUrl: string): string[] {
+  const hrefRegex = /href=["']([^"']+\.txt(?:\?[^"']*)?)["']/gi;
+  const links = new Set<string>();
+
+  let match: RegExpExecArray | null;
+  while ((match = hrefRegex.exec(html)) !== null) {
+    const href = match[1];
+    links.add(toAbsoluteUrl(baseUrl, href));
+  }
+
+  return [...links];
+}
+
+function fileNameFromUrl(fileUrl: string): string {
+  const pathname = new URL(fileUrl).pathname;
+  const raw = pathname.split("/").filter(Boolean).pop() ?? "word-list.txt";
+  return decodeURIComponent(raw);
+}
 
 export async function GET() {
-  const configuredDir = process.env.WORD_LISTS_DIR;
-  const presetsDir = configuredDir && configuredDir.trim().length > 0 ? configuredDir : DEFAULT_PRESETS_DIR;
+  const configuredUrl = process.env.WORD_LISTS_URL;
+  const wordsUrl = configuredUrl && configuredUrl.trim().length > 0 ? configuredUrl : DEFAULT_REMOTE_WORDS_URL;
 
   try {
-    const entries = await fs.readdir(presetsDir, { withFileTypes: true });
+    const indexResponse = await fetch(wordsUrl, { cache: "no-store" });
+    if (!indexResponse.ok) {
+      return NextResponse.json({ source: wordsUrl, presets: [] });
+    }
 
-    const txtFiles = entries.filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith(".txt"));
+    const html = await indexResponse.text();
+    const txtUrls = getTxtLinksFromHtml(html, wordsUrl);
 
     const presetsWithMeta = await Promise.all(
-      txtFiles.map(async (entry) => {
-        const fileName = entry.name;
-        const fullPath = path.join(presetsDir, fileName);
-        const [content, stats] = await Promise.all([fs.readFile(fullPath, "utf8"), fs.stat(fullPath)]);
-        const words = parseWords(content);
+      txtUrls.map(async (fileUrl, index) => {
+        const response = await fetch(fileUrl, { cache: "no-store" });
+        if (!response.ok) return null;
 
-        return {
+        const content = await response.text();
+        const words = parseWords(content);
+        const fileName = fileNameFromUrl(fileUrl);
+
+        let modifiedAt = 0;
+        const lastModified = response.headers.get("last-modified");
+        if (lastModified) {
+          const ts = Date.parse(lastModified);
+          if (!Number.isNaN(ts)) modifiedAt = ts;
+        }
+
+        const preset: Preset = {
           id: fileName,
           name: fileName.replace(/\.txt$/i, ""),
           words,
-          modifiedAt: stats.mtimeMs,
+          modifiedAt,
+          order: index,
         };
+
+        return preset;
       })
     );
 
     const presets = presetsWithMeta
+      .filter((preset): preset is Preset => preset !== null)
       .filter((preset) => preset.words.length > 0)
-      .sort((a, b) => b.modifiedAt - a.modifiedAt)
-      .map(({ modifiedAt: _modifiedAt, ...preset }) => preset);
+      .sort((a, b) => {
+        if (a.modifiedAt && b.modifiedAt) return b.modifiedAt - a.modifiedAt;
+        if (a.modifiedAt) return -1;
+        if (b.modifiedAt) return 1;
+        return b.order - a.order;
+      })
+      .map(({ modifiedAt: _modifiedAt, order: _order, ...preset }) => preset);
 
-    return NextResponse.json({ presetsDir, presets });
+    return NextResponse.json({ source: wordsUrl, presets });
   } catch {
-    return NextResponse.json({ presetsDir, presets: [] });
+    return NextResponse.json({ source: wordsUrl, presets: [] });
   }
 }

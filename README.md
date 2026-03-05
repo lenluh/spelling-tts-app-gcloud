@@ -34,21 +34,16 @@ This creates a static `out/` folder. Upload everything inside `out/` to your hos
 
 ## Preset `.txt` word lists
 
-You can place `.txt` files in a `word-lists/` folder at the project root.
+By default, the app reads presets from:
 
-Example:
+- `http://spelling.elii.se/words/`
 
-```text
-word-lists/
-  animals.txt
-  grade-1.txt
-  space-words.txt
-```
+It scans that page for `.txt` links, loads them, and shows one button per file.
 
 - Each file should contain one word per line (CSV first-column also works).
-- On the title page, a preset button appears for each `.txt` file.
 - Button text matches the file name (without `.txt`).
-- Optional: set `WORD_LISTS_DIR` to use a different folder path.
+- Newest list loads by default (based on `Last-Modified` header when available).
+- Optional: set `WORD_LISTS_URL` to use a different URL.
 
 ## Notes
 

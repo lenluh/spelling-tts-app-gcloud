@@ -1,6 +1,16 @@
 "use client";
 
-async function playCloudAudio(text: string): Promise<boolean> {
+let currentAudio: HTMLAudioElement | null = null;
+let speakRequestId = 0;
+
+function stopCurrentAudio() {
+  if (!currentAudio) return;
+  currentAudio.pause();
+  currentAudio.currentTime = 0;
+  currentAudio = null;
+}
+
+async function playCloudAudio(text: string, requestId: number): Promise<boolean> {
   const res = await fetch("/api/tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -12,8 +22,18 @@ async function playCloudAudio(text: string): Promise<boolean> {
   const data = (await res.json()) as { audioContent?: string };
   if (!data.audioContent) return false;
 
+  if (requestId !== speakRequestId) return false;
+
+  stopCurrentAudio();
   const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+  currentAudio = audio;
   await audio.play();
+
+  if (requestId !== speakRequestId) {
+    stopCurrentAudio();
+    return false;
+  }
+
   return true;
 }
 
@@ -49,10 +69,14 @@ export function chooseBestUSVoice(voices: SpeechSynthesisVoice[]): SpeechSynthes
 export async function speakWord(word: string, voice: SpeechSynthesisVoice | null): Promise<void> {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
 
-  window.speechSynthesis.cancel();
+  speakRequestId += 1;
+  const requestId = speakRequestId;
 
-  const cloudWorked = await playCloudAudio(word).catch(() => false);
-  if (cloudWorked) return;
+  window.speechSynthesis.cancel();
+  stopCurrentAudio();
+
+  const cloudWorked = await playCloudAudio(word, requestId).catch(() => false);
+  if (cloudWorked || requestId !== speakRequestId) return;
 
   const utterance = new SpeechSynthesisUtterance(word);
   utterance.lang = "en-US";

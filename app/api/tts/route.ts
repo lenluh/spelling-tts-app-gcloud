@@ -8,6 +8,19 @@ type CacheEntry = {
   createdAt: number;
 };
 
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+function normalizeWordInput(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 const MAX_CACHE_ENTRIES = 1000;
 const ttsCache = new Map<string, CacheEntry>();
@@ -38,11 +51,17 @@ export async function POST(req: Request) {
 
   try {
     const body = (await req.json()) as { text?: string };
-    const text = body.text?.trim() ?? "";
+    const text = normalizeWordInput(body.text ?? "");
 
     if (!text) {
       return NextResponse.json({ error: "text is required" }, { status: 400 });
     }
+
+    if (text.length > 80) {
+      return NextResponse.json({ error: "text too long" }, { status: 400 });
+    }
+
+    const ssml = `<speak><break time="120ms"/>${escapeXml(text)}<break time="120ms"/></speak>`;
 
     const now = Date.now();
     pruneCache(now);
@@ -57,9 +76,9 @@ export async function POST(req: Request) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        input: { text },
+        input: { ssml },
         voice: { languageCode: "en-US", name: "en-US-Neural2-C" },
-        audioConfig: { audioEncoding: "MP3", speakingRate: 0.92, pitch: 0 },
+        audioConfig: { audioEncoding: "MP3", speakingRate: 0.9, pitch: 0 },
       }),
     });
 

@@ -4,18 +4,48 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { buildFreshSession, DEFAULT_WORDS, loadJSON, makeResults, parseWords, saveJSON, STORAGE_KEYS } from "@/lib/storage";
 
+type WordPreset = {
+  id: string;
+  name: string;
+  words: string[];
+};
+
 export default function TitlePage() {
   const router = useRouter();
   const [pastedWords, setPastedWords] = useState("");
   const [msg, setMsg] = useState("");
   const [shuffle, setShuffle] = useState(false);
+  const [presets, setPresets] = useState<WordPreset[]>([]);
 
   useEffect(() => {
     const existingWords = loadJSON<string[]>(STORAGE_KEYS.words);
     if (!existingWords || existingWords.length === 0) {
       saveJSON(STORAGE_KEYS.words, DEFAULT_WORDS);
     }
+
+    const loadPresets = async () => {
+      try {
+        const response = await fetch("/api/presets", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = (await response.json()) as { presets?: WordPreset[] };
+        const loadedPresets = data.presets ?? [];
+        setPresets(loadedPresets);
+
+        if (loadedPresets.length > 0) {
+          setPastedWords((prev) => (prev.trim().length > 0 ? prev : loadedPresets[0].words.join("\n")));
+        }
+      } catch {
+        setPresets([]);
+      }
+    };
+
+    void loadPresets();
   }, []);
+
+  const applyPreset = (preset: WordPreset) => {
+    setPastedWords(preset.words.join("\n"));
+    setMsg("");
+  };
 
   const startPractice = () => {
     const fromPaste = parseWords(pastedWords);
@@ -41,6 +71,25 @@ export default function TitlePage() {
 
         <div className="uploadBox">
           <h2>Paste Word List</h2>
+
+          {presets.length > 0 && (
+            <>
+              <p className="instruction">Or pick a preset:</p>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
+                {presets.map((preset) => (
+                  <button
+                    key={preset.id}
+                    className="btn"
+                    type="button"
+                    onClick={() => applyPreset(preset)}
+                    aria-label={`Use ${preset.name} word list`}
+                  >
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           <label htmlFor="pasteWords">Paste words (one per line)</label>
           <textarea
             id="pasteWords"

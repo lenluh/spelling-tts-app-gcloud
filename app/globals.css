@@ -219,6 +219,17 @@ a:focus {
   gap: 10px;
 }
 
+.wordNeedsPractice {
+  color: var(--wrong);
+  font-weight: 900;
+}
+
+@media (max-width: 560px) {
+  .resultItemRow {
+    grid-template-columns: 1fr;
+  }
+}
+
 .toggle {
   display: inline-flex;
   align-items: center;
@@ -238,10 +249,5 @@ a:focus {
 
   .card {
     padding: 24px;
-  }
-
-  .answerForm {
-    grid-template-columns: 1fr auto;
-    align-items: end;
   }
 }

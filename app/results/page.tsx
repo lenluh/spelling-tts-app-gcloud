@@ -56,7 +56,7 @@ export default function ResultsPage() {
         <ul className="resultsList">
           {results.perWord.map((item, i) => (
             <li key={`${item.word}-${i}`} className="resultItem resultItemRow">
-              <span className="word">{item.word}</span>
+              <span className={`word ${item.attempts > 1 ? "wordNeedsPractice" : ""}`}>{item.word}</span>
               <span>Attempts: {item.attempts}</span>
             </li>
           ))}

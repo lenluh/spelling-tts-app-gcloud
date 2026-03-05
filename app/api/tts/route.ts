@@ -37,8 +37,8 @@ const IPA_OVERRIDES: Record<string, string> = {
   pie: "paɪ",
 };
 
-function makeCacheKey(text: string): string {
-  return text.trim().toLowerCase();
+function makeCacheKey(text: string, voiceName: string): string {
+  return `${voiceName}::${text.trim().toLowerCase()}`;
 }
 
 function pruneCache(now: number) {
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const body = (await req.json()) as { text?: string };
+    const body = (await req.json()) as { text?: string; voiceChoice?: string };
     const text = normalizeWordInput(body.text ?? "");
 
     if (!text) {
@@ -79,7 +79,8 @@ export async function POST(req: Request) {
     const now = Date.now();
     pruneCache(now);
 
-    const cacheKey = makeCacheKey(text);
+    const voiceName = body.voiceChoice === "Dad" ? "en-US-Neural2-D" : "en-US-Neural2-C";
+    const cacheKey = makeCacheKey(text, voiceName);
     const cached = ttsCache.get(cacheKey);
     if (cached) {
       return NextResponse.json({ audioContent: cached.audioContent, cached: true });
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         input: { ssml },
-        voice: { languageCode: "en-US", name: "en-US-Neural2-C" },
+        voice: { languageCode: "en-US", name: voiceName },
         audioConfig: { audioEncoding: "MP3", speakingRate: 0.9, pitch: 0 },
       }),
     });

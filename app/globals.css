@@ -158,7 +158,8 @@ li {
 }
 
 textarea,
-#answerInput {
+#answerInput,
+select {
   width: 100%;
   border: 2px solid var(--border);
   border-radius: 14px;

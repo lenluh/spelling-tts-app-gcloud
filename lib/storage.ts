@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
   words: "spelling.words",
   session: "spelling.session",
   results: "spelling.results",
+  voiceChoice: "spelling.voiceChoice",
 };
 
 export const DEFAULT_WORDS = [

@@ -15,12 +15,20 @@ export default function TitlePage() {
   const [pastedWords, setPastedWords] = useState("");
   const [msg, setMsg] = useState("");
   const [shuffle, setShuffle] = useState(true);
+  const [voiceChoice, setVoiceChoice] = useState<"Mom" | "Dad">("Mom");
   const [presets, setPresets] = useState<WordPreset[]>([]);
 
   useEffect(() => {
     const existingWords = loadJSON<string[]>(STORAGE_KEYS.words);
     if (!existingWords || existingWords.length === 0) {
       saveJSON(STORAGE_KEYS.words, DEFAULT_WORDS);
+    }
+
+    const savedVoice = loadJSON<"Mom" | "Dad">(STORAGE_KEYS.voiceChoice);
+    if (savedVoice === "Mom" || savedVoice === "Dad") {
+      setVoiceChoice(savedVoice);
+    } else {
+      saveJSON(STORAGE_KEYS.voiceChoice, "Mom");
     }
 
     const loadPresets = async () => {
@@ -107,6 +115,21 @@ export default function TitlePage() {
             />
             Shuffle words
           </label>
+
+          <label htmlFor="voiceChoice">Voice:</label>
+          <select
+            id="voiceChoice"
+            value={voiceChoice}
+            onChange={(e) => {
+              const next = e.target.value === "Dad" ? "Dad" : "Mom";
+              setVoiceChoice(next);
+              saveJSON(STORAGE_KEYS.voiceChoice, next);
+            }}
+            aria-label="Voice selection"
+          >
+            <option value="Mom">Mom</option>
+            <option value="Dad">Dad</option>
+          </select>
 
           <button className="btn" type="button" onClick={startPractice} aria-label="Start spelling practice">
             Start Practice

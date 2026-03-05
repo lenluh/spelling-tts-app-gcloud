@@ -1,5 +1,7 @@
 "use client";
 
+import { STORAGE_KEYS, loadJSON } from "@/lib/storage";
+
 let currentAudio: HTMLAudioElement | null = null;
 let speakRequestId = 0;
 
@@ -11,10 +13,13 @@ function stopCurrentAudio() {
 }
 
 async function playCloudAudio(text: string, requestId: number): Promise<boolean> {
+  const savedChoice = loadJSON<"Mom" | "Dad">(STORAGE_KEYS.voiceChoice);
+  const voiceChoice = savedChoice === "Dad" ? "Dad" : "Mom";
+
   const res = await fetch("/api/tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, voiceChoice }),
   });
 
   if (!res.ok) return false;

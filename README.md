@@ -24,19 +24,21 @@ npm run dev
 
 Then open `http://localhost:3000`.
 
-## Build static files (for GoDaddy shared hosting)
+## Build / deploy
 
 ```bash
 npm run build
 ```
 
-This creates a static `out/` folder. Upload everything inside `out/` to your hosting `public_html` folder (or a subfolder for a subdomain).
+Deploy on **Vercel** as a normal Next.js app.
+
+> Note: preset loading uses a server API route (`/api/presets`) to fetch remote `.txt` files, so static export hosting is not supported for this feature.
 
 ## Preset `.txt` word lists
 
 By default, the app reads presets from:
 
-- `http://spelling.elii.se/words/`
+- `https://spelling.elii.se/words/`
 
 It scans that page for `.txt` links, loads them, and shows one button per file.
 
@@ -44,6 +46,7 @@ It scans that page for `.txt` links, loads them, and shows one button per file.
 - Button text matches the file name (without `.txt`).
 - Newest list loads by default (based on `Last-Modified` header when available).
 - Optional: set `WORD_LISTS_URL` to use a different URL.
+- On Vercel, add `WORD_LISTS_URL` in Project Settings → Environment Variables if you want to override it.
 
 ## Notes
 

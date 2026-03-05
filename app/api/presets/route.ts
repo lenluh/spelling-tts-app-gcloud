@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { parseWords } from "@/lib/storage";
 
-const DEFAULT_REMOTE_WORDS_URL = "http://spelling.elii.se/words/";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const DEFAULT_REMOTE_WORDS_URL = "https://spelling.elii.se/words/";
 
 type Preset = {
   id: string;

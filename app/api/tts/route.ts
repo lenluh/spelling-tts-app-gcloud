@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "text is required" }, { status: 400 });
     }
 
-    if (text.length > 80) {
+    if (text.length > 400) {
       return NextResponse.json({ error: "text too long" }, { status: 400 });
     }
 

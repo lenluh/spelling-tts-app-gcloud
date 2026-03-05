@@ -66,7 +66,7 @@ export function chooseBestUSVoice(voices: SpeechSynthesisVoice[]): SpeechSynthes
   return scored[0]?.voice ?? usVoices[0];
 }
 
-export async function speakWord(word: string, voice: SpeechSynthesisVoice | null): Promise<void> {
+export async function speakText(text: string, voice: SpeechSynthesisVoice | null): Promise<void> {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
 
   speakRequestId += 1;
@@ -75,14 +75,18 @@ export async function speakWord(word: string, voice: SpeechSynthesisVoice | null
   window.speechSynthesis.cancel();
   stopCurrentAudio();
 
-  const cloudWorked = await playCloudAudio(word, requestId).catch(() => false);
+  const cloudWorked = await playCloudAudio(text, requestId).catch(() => false);
   if (cloudWorked || requestId !== speakRequestId) return;
 
-  const utterance = new SpeechSynthesisUtterance(word);
+  const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   utterance.rate = 0.92;
   utterance.pitch = 1;
   if (voice) utterance.voice = voice;
 
   window.speechSynthesis.speak(utterance);
+}
+
+export async function speakWord(word: string, voice: SpeechSynthesisVoice | null): Promise<void> {
+  await speakText(word, voice);
 }

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { buildFreshSession, DEFAULT_WORDS, loadJSON, makeResults, saveJSON, STORAGE_KEYS } from "@/lib/storage";
 import { SessionResults } from "@/lib/types";
-import { chooseBestUSVoice } from "@/lib/tts";
+import { chooseBestUSVoice, speakText } from "@/lib/tts";
 
 const DAD_JOKES = [
   "What did the policeman say to his tummy? You're under a vest!",
@@ -90,31 +90,14 @@ const DAD_JOKES = [
   "Why don't ants catch flu? Because they have tiny anti-bodies."
 ];
 
-function speakCelebration(joke: string) {
+async function speakCelebration(joke: string) {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
 
   const voices = window.speechSynthesis.getVoices();
   const voice = chooseBestUSVoice(voices);
 
-  window.speechSynthesis.cancel();
-
-  const intro = new SpeechSynthesisUtterance("You did awesome! You win a dad joke!");
-  intro.lang = "en-US";
-  intro.rate = 0.92;
-  intro.pitch = 1;
-  if (voice) intro.voice = voice;
-
-  const jokeUtterance = new SpeechSynthesisUtterance(joke);
-  jokeUtterance.lang = "en-US";
-  jokeUtterance.rate = 0.92;
-  jokeUtterance.pitch = 1;
-  if (voice) jokeUtterance.voice = voice;
-
-  intro.onend = () => {
-    window.speechSynthesis.speak(jokeUtterance);
-  };
-
-  window.speechSynthesis.speak(intro);
+  await speakText("You did awesome! You win a dad joke!", voice);
+  await speakText(joke, voice);
 }
 
 export default function PerfectResultsPage() {
@@ -142,7 +125,7 @@ export default function PerfectResultsPage() {
     const runSpeech = () => {
       if (hasSpokenRef.current) return;
       hasSpokenRef.current = true;
-      speakCelebration(joke);
+      void speakCelebration(joke);
     };
 
     runSpeech();

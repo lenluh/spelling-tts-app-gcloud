@@ -12,6 +12,7 @@ export default function PracticePage() {
   const [session, setSession] = useState<SessionState | null>(null);
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<"ok" | "wrong" | null>(null);
+  const [showWordHint, setShowWordHint] = useState(false);
   const [voice, setVoice] = useState<SpeechSynthesisVoice | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -81,6 +82,7 @@ export default function PracticePage() {
     if (cleaned === expected) {
       updated.completed[session.currentIndex] = true;
       setFeedback("ok");
+      setShowWordHint(false);
       setAnswer("");
 
       const isLast = session.currentIndex === session.words.length - 1;
@@ -97,6 +99,10 @@ export default function PracticePage() {
       setTimeout(() => setFeedback(null), 800);
     } else {
       setFeedback("wrong");
+      const triesForWord = updated.attemptsByWord[session.currentIndex] ?? 0;
+      if (triesForWord >= 3) {
+        setShowWordHint(true);
+      }
       persistSession(updated);
       inputRef.current?.focus();
     }
@@ -106,6 +112,7 @@ export default function PracticePage() {
     if (!session) return;
     const fresh = buildFreshSession(session.words, session.shuffle ?? false);
     setFeedback(null);
+    setShowWordHint(false);
     setAnswer("");
     persistSession(fresh);
     saveJSON(STORAGE_KEYS.results, makeResults(fresh));
@@ -149,6 +156,7 @@ export default function PracticePage() {
 
         {feedback === "ok" && <p className="feedback ok">✅ OK!</p>}
         {feedback === "wrong" && <p className="feedback wrong">❌ Try again</p>}
+        {showWordHint && <p className="feedback wrong">The word is: {currentWord}</p>}
       </section>
     </main>
   );

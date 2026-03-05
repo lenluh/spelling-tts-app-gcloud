@@ -21,9 +21,21 @@ function normalizeWordInput(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
 
+function ssmlTextForWord(text: string): string {
+  const key = text.toLowerCase();
+  const ipa = IPA_OVERRIDES[key];
+  if (!ipa) return escapeXml(text);
+
+  return `<phoneme alphabet="ipa" ph="${escapeXml(ipa)}">${escapeXml(text)}</phoneme>`;
+}
+
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 const MAX_CACHE_ENTRIES = 1000;
 const ttsCache = new Map<string, CacheEntry>();
+
+const IPA_OVERRIDES: Record<string, string> = {
+  pie: "paɪ",
+};
 
 function makeCacheKey(text: string): string {
   return text.trim().toLowerCase();
@@ -61,7 +73,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "text too long" }, { status: 400 });
     }
 
-    const ssml = `<speak><break time="120ms"/>${escapeXml(text)}<break time="120ms"/></speak>`;
+    const ssmlWord = ssmlTextForWord(text);
+    const ssml = `<speak><break time="120ms"/>${ssmlWord}<break time="120ms"/></speak>`;
 
     const now = Date.now();
     pruneCache(now);

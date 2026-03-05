@@ -9,11 +9,11 @@ Kid-friendly spelling practice app built with Next.js + TypeScript.
 - Results page (`/results`) with session summary and per-word stats
 - Upload word lists from a paste textbox (one word per line)
 - Local persistence using `localStorage`
-- US-focused TTS voice selection (`en-US`) with graceful fallback
+- Higher-quality Google Cloud Neural TTS (with browser TTS fallback)
+- Server-side TTS response cache for repeat words
 - Accessibility basics: keyboard-friendly controls, focus states, ARIA labels
-- Optional extras included:
+- Optional extra included:
   - Shuffle toggle (applies on restart)
-  - Hide words toggle on Results page
 
 ## Run locally
 
@@ -48,8 +48,22 @@ It scans that page for `.txt` links, loads them, and shows one button per file.
 - Optional: set `WORD_LISTS_URL` to use a different URL.
 - On Vercel, add `WORD_LISTS_URL` in Project Settings → Environment Variables if you want to override it.
 
+## Google Cloud TTS setup
+
+1. Create/select a Google Cloud project.
+2. Enable **Cloud Text-to-Speech API**.
+3. Create an API key.
+4. Add env var:
+
+```bash
+GOOGLE_TTS_API_KEY=your_key_here
+```
+
+For Vercel: Project Settings → Environment Variables → add `GOOGLE_TTS_API_KEY` for Production/Preview/Development.
+
 ## Notes
 
-- Uses browser Web Speech API (`speechSynthesis`) only (no paid API).
+- App tries Google Cloud TTS first, then falls back to browser `speechSynthesis` if API is unavailable.
+- TTS audio is cached in server memory for repeated words (reduces API calls).
 - Works best in Chrome and modern browsers.
 - Data is stored in browser localStorage.

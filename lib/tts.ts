@@ -1,5 +1,22 @@
 "use client";
 
+async function playCloudAudio(text: string): Promise<boolean> {
+  const res = await fetch("/api/tts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+
+  if (!res.ok) return false;
+
+  const data = (await res.json()) as { audioContent?: string };
+  if (!data.audioContent) return false;
+
+  const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+  await audio.play();
+  return true;
+}
+
 export function chooseBestUSVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   if (!voices.length) return null;
   const usVoices = voices.filter((v) => v.lang.toLowerCase().startsWith("en-us"));
@@ -29,10 +46,13 @@ export function chooseBestUSVoice(voices: SpeechSynthesisVoice[]): SpeechSynthes
   return scored[0]?.voice ?? usVoices[0];
 }
 
-export function speakWord(word: string, voice: SpeechSynthesisVoice | null): void {
+export async function speakWord(word: string, voice: SpeechSynthesisVoice | null): Promise<void> {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
 
   window.speechSynthesis.cancel();
+
+  const cloudWorked = await playCloudAudio(word).catch(() => false);
+  if (cloudWorked) return;
 
   const utterance = new SpeechSynthesisUtterance(word);
   utterance.lang = "en-US";

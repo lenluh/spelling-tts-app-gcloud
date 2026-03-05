@@ -14,7 +14,7 @@ export default function TitlePage() {
   const router = useRouter();
   const [pastedWords, setPastedWords] = useState("");
   const [msg, setMsg] = useState("");
-  const [shuffle, setShuffle] = useState(false);
+  const [shuffle, setShuffle] = useState(true);
   const [presets, setPresets] = useState<WordPreset[]>([]);
 
   useEffect(() => {
@@ -66,15 +66,13 @@ export default function TitlePage() {
   return (
     <main className="page">
       <section className="card" aria-label="Spelling app title and setup">
-        <h1>Spelling Practice</h1>
-        <p className="instruction">Step 1: Paste words. Step 2: Practice. Step 3: See results.</p>
+        <h1>3rd Grade Spell Trainer 6000</h1>
 
         <div className="uploadBox">
-          <h2>Paste Word List</h2>
+          <h2>Insert words or pick a preset</h2>
 
           {presets.length > 0 && (
             <>
-              <p className="instruction">Or pick a preset:</p>
               <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
                 {presets.map((preset) => (
                   <button

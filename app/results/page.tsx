@@ -8,7 +8,6 @@ import { SessionResults } from "@/lib/types";
 export default function ResultsPage() {
   const router = useRouter();
   const [results, setResults] = useState<SessionResults | null>(null);
-  const [hideWords, setHideWords] = useState(true);
 
   useEffect(() => {
     const stored = loadJSON<SessionResults>(STORAGE_KEYS.results);
@@ -47,30 +46,18 @@ export default function ResultsPage() {
 
         <div className="controls">
           <button className="btn" onClick={practiceAgain} aria-label="Practice again with same list">Practice Again</button>
-          <button className="btn" onClick={() => router.push("/")} aria-label="Go to title page and upload new list">Upload New List</button>
+          <button className="btn" onClick={() => router.push("/")} aria-label="Go to title page and practice other words">Practice other words</button>
         </div>
       </section>
 
       <section className="card" aria-label="Per word performance">
-        <div className="row">
-          <h2>Word Details</h2>
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={hideWords}
-              onChange={(e) => setHideWords(e.target.checked)}
-              aria-label="Hide or show words"
-            />
-            Hide words
-          </label>
-        </div>
+        <h2>Word Details</h2>
 
         <ul className="resultsList">
           {results.perWord.map((item, i) => (
-            <li key={`${item.word}-${i}`} className="resultItem">
-              <span className="word">{hideWords ? `Word ${i + 1}` : item.word}</span>
+            <li key={`${item.word}-${i}`} className="resultItem resultItemRow">
+              <span className="word">{item.word}</span>
               <span>Attempts: {item.attempts}</span>
-              <span className={item.correct ? "status ok" : "status wrong"}>{item.correct ? "Correct" : "Not Correct"}</span>
             </li>
           ))}
         </ul>

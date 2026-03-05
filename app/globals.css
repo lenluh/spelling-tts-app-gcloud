@@ -98,6 +98,11 @@ li {
   gap: 12px;
 }
 
+.controls {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: stretch;
+}
+
 .row {
   display: flex;
   flex-wrap: wrap;
@@ -121,6 +126,9 @@ li {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
+  white-space: normal;
+  word-break: break-word;
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.14);
   transform: translateY(0);
   transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
@@ -203,6 +211,12 @@ a:focus {
   display: grid;
   gap: 6px;
   background: #fbfdff;
+}
+
+.resultItemRow {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
 }
 
 .toggle {
